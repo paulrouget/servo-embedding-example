@@ -1,8 +1,7 @@
-extern crate gleam;
 extern crate glutin;
 extern crate servo;
 
-use gleam::gl;
+use servo::gl;
 use glutin::GlContext;
 use servo::BrowserId;
 use servo::compositing::compositor_thread::EventLoopWaker;

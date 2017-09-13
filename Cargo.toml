@@ -5,5 +5,4 @@ authors = ["Paul Rouget <me@paulrouget.com>"]
 
 [dependencies]
 libservo = { git = "https://github.com/servo/servo", rev = "6051e5ed02" }
-gleam = "0.4"
 glutin = "0.9"

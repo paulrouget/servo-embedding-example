@@ -3,57 +3,54 @@ Tutorial: Embedding Servo
 
 This document describes how to use Servo in a third party Rust project.
 
-It comes with the implement of standalone minimal browser.
+It comes with the implementation of standalone minimal browser.
 
-The repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example) is regularly updated
-to match the must recent Servo version.
+The repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example) is regularly updated to match the must recent Servo version.
 
 ## Notes:
 
-The embedding API is still a work in progress. It is functional but not polished.
+The embedding API is still work-in-progress. It is functional but not polished.
 
-This tutorial does not cover how to build on Windows as it is far for being
-straight forward for now. See [servo/servo#18343](http://github.com/servo/servo/issues/18343)
-and [paulrouget/servoshell#33](http://github.com/paulrouget/servoshell/issues/33).
+This tutorial does not cover how to build on Windows as it is far from being straight forward for now as it requires importing and tweaking multiple python script from Servo. See [servo/servo#18343](http://github.com/servo/servo/issues/18343) and [paulrouget/servoshell#33](http://github.com/paulrouget/servoshell/issues/33).
 
-It doesn't not cover all the feature one would find in a full browser. A more complete
-example of a Servo-based browser can be found here: [paulrouget/servoshell](http://github.com/paulrouget/servoshell).
+It doesn't not cover all the features we would find in a full-featured browser. A more complete example of a Servo-based browser can be found here: [paulrouget/servoshell](http://github.com/paulrouget/servoshell).
 
 ## Overview
 
-To embed Servo, one needs to:
+To embed Servo, we need to:
 
 1. compile Servo as a dependency
-2. provide Gl buffer with its Gl methods
-3. implement a set callbacks (servo to embedder communication) by implementing the `WindowMethods` trait:
-   1. to provide coordinates information,
+2. provide OpenGL context with its OpenGL methods
+3. implement a set callbacks (servo-to-embedder communication) by implementing the `WindowMethods` trait:
+   1. to provide coordinates of the OpenGL buffer,
    2. to wake-up the event loop,
-   3. to update the Gl buffer,
-   4. be notified of page navigation
-4. send events to servo (embedder to servo communication) by send `WindowEvent`s to servo:
-   1. to create and select browsers
-   2. to enable mouse and keyboard interactions
-   3. to control page navigation
+   3. to update the OpenGL buffer,
+   4. to be notified of page navigations,
+4. send events to servo (embedder-to-servo communication) by sending `WindowEvent`s to servo:
+   1. to create and select browsers,
+   2. to enable mouse and keyboard interactions,
+   3. to control page navigation,
 
 In this tutorial we will go through each steps.
 
 ## Create Rust project
 
-[Install rustup](https://www.rustup.rs/).
+[Install rustup](https://www.rustup.rs/) and make sure to install all the Servo dependencies
+[as described here](https://github.com/servo/servo#setting-up-your-environment).
 
-Initialize your project: 
+Initialize your project:
 
 * `cargo init --bin --name servo-embedding-example`
 
 We recommend cloning the servo repository as we will need to copy some files to our project. In a parallel directory:
 
-* `git clone https://github.com/servo/servo.git`.
+* `git clone https://github.com/servo/servo.git`
 
 ## Installing the proper Rust toolchain
 
 As for now, Servo requires Rust Nightly.
 
-Import the `rust-toolchain` file from the servo directory to make sure we use the same `rustc` version as Servo.
+Import the `rust-toolchain` file from the servo directory to make sure we use the same `rustc` version:
 
 * `cp ../servo/rust-toolchain .`
 * `` rustup install `cat rust-toolchain` ``
@@ -65,23 +62,22 @@ Note: this will change. [See this issue](https://github.com/paulrouget/servoshel
 Add Servo as a dependency to your `Cargo.toml`:
 
 ```toml
-# Cargo.toml, [dependencies] section:
+[dependencies]
 libservo = { git = "https://github.com/servo/servo", rev = "6051e5ed02" }
 ```
 
-Because we are importing some files from the servo repository directly (`rust-toolchain`, and as we will see later, `Cargo.lock` and `resources`), it is necessary to specify servo's revision number (with `rev = …`).
+Because we are importing some files from the servo repository directly (`rust-toolchain`, and as we will see later, `Cargo.lock` and `resources`) and because Servo is not versionned yet, it is necessary to specify servo's revision hash (with `rev = …`).
 
-If you'd rather use local copy of Servo, do not point to the root of the servo directory
-but to `components/servo`:
+If you'd rather use local copy of Servo, do not point to the root of the servo directory but to `components/servo`:
 
 ```toml
-# Cargo.toml, [dependencies] section:
+[dependencies]
 libservo = { path = "../servo/components/servo" }
 ```
 
 Servo requires some specific version of its dependencies. It is highly recommended to import Servo's `Cargo.lock`:
 
-*  `cp ../servo/Cargo.lock .`
+* `cp ../servo/Cargo.lock .`
 
 Note: this will change. [See this issue](https://github.com/paulrouget/servoshell/issues/36).
 
@@ -98,23 +94,16 @@ To update Servo:
 1. change the revision in `Cargo.toml` (the `rev` field)
 2. Copy `rust-toolchain`, `Cargo.log` and `resources` from Servo
 
-## Gl dependencies
+## OpenGL
 
-The first thing Servo requires is access to GL functions, as described by [the Gl pointer trait](http://doc.servo.org/gleam/gl/trait.Gl.html).
+The first thing Servo requires is access to OpenGL functions, as described by [the gleam::gl::Gl trait](http://doc.servo.org/gleam/gl/trait.Gl.html).
 
-The GL pointer trait is described by the gleam trait:
+It's up to the embedder to create and update the OpenGL buffer.
 
-```toml
-# Cargo.toml, [dependencies] section:
-gleam = "0.4"
-```
-
-It's up to the embedder to create and update the Gl context.
-
-In this example, we will use the [Glutin crate](https://crates.io/crates/glutin) to create the Gl context. Glutin is a library which provides cross-platform methods to open native windows with a full-window Gl buffer.
+In this tutorial, we will use the [Glutin crate](https://crates.io/crates/glutin) to create the OpenGL context. Glutin is a library which provides cross-platform methods to open native windows with a full-window OpenGL buffer.
 
 ```toml
-# Cargo.toml, [dependencies] section:
+# Cargo.toml
 glutin = "0.9"
 ```
 
@@ -143,7 +132,7 @@ Notice that `Cargo.lock` has been updated.
 
 ## Glutin's event loop
 
-Now let's open an empty window and run the Glutin event loop (all of these have nothing to do with Servo just yet). See [Glutin documentation](https://docs.rs/glutin/) for more details.
+Now let's open an empty window and run the Glutin event loop (this code has nothing to do with Servo just yet). See [Glutin documentation](https://docs.rs/glutin/) for more details.
 
 ```rust
 extern crate servo;
@@ -162,7 +151,6 @@ fn main() {
     window.show();
 
     event_loop.run_forever(|_event| {
-        // …
         glutin::ControlFlow::Continue
     });
 }
@@ -170,7 +158,7 @@ fn main() {
 
 ## EventLoopWaker: mechanism to wake up the event loop
 
-Servo internals and the embedder code will run in different threads. Usually, the embedder will have an event loop that will block when no user events happen. Servo will need a way to wake up the event loop from a different thread when needed (to update the Gl buffer for example, or notify the embedder of any navigation changes). It's up to the embedder to provide such a mechanism, by providing a thread-safe object that implements the [`EventLoopWaker`](http://doc.servo.org/compositing/compositor_thread/trait.EventLoopWaker.html) trait.
+Servo internals and the embedder code will run in different threads. Usually, the embedder will have an event loop that will block when no user events happen. Servo will need a way to wake up the event loop from a different thread when needed (to update the OpenGL buffer for example, or notify the embedder of any navigation changes). It's up to the embedder to provide such a mechanism, by providing a thread-safe object that implements the [`EventLoopWaker`](http://doc.servo.org/compositing/compositor_thread/trait.EventLoopWaker.html) trait.
 
 In our example, we will use Glutin's [EventLoopProxy](https://docs.rs/glutin/0.9.2/glutin/struct.EventsLoopProxy.html#method.wakeup) to wake up the event loop.
 
@@ -205,13 +193,12 @@ fn main() {
 }
 ```
 
-## Retrieving Gl context
+## Retrieving OpenGL context
 
-To have access to the Gl context methods, we will use Glutin's [`get_proc_address`](https://docs.rs/glutin/0.9.2/glutin/trait.GlContext.html#tymethod.get_proc_address) to initialize the Gl binding:
+To provide access to the OpenGL context methods, we will use Glutin's [`get_proc_address`](https://docs.rs/glutin/0.9.2/glutin/trait.GlContext.html#tymethod.get_proc_address) to initialize the OpenGL binding:
 
 ```rust
-extern crate gleam;
-use gleam::gl;
+use servo::gl;
 use glutin::GlContext;
 
 // […]
@@ -229,15 +216,15 @@ At this point, we managed to:
 * compile our project with `libservo`
 * open an empty window
 * have a mechanism (`GlutinEventLoopWaker`) to wake the event loop
-* have an object (`gl`) that implement the Gl methods
+* have an object (`gl`) that implements `gl::Gl`
 
 The next step is to initialize Servo and implement its callbacks.
 
 ## Configure Servo:
 
-Servo can be configured with different options. See [the documentation](http://doc.servo.org/servo_config/opts/struct.Opts.html) for an exhaustive list.
+http://doc.servo.org/servo_config/opts/struct.Opts.html
 
-It is also necessary to set the path of the `resources` directory we copied earlier.
+Servo can be configured with different options. It is also necessary to set the path of the `resources` directory we copied earlier.
 
 ``` rust
 use servo::servo_config::resource_files::set_resources_path;
@@ -247,7 +234,8 @@ let path = env::current_dir().unwrap().join("resources");
 let path = path.to_str().unwrap().to_string();
 set_resources_path(Some(path));
 
-opts::set_defaults(opts::default_opts());
+let mut opts = opts::default_opts();
+opts::set_defaults(opts);
 ```
 
 ## Implement WindowMethods
@@ -256,7 +244,9 @@ http://doc.servo.org/compositing/windowing/trait.WindowMethods.html
 
 The `WindowMethods` trait describes a set of methods the embedder must implement.
 
-When initiliazing Servo via [Servo::new](http://doc.servo.org/servo/struct.Servo.html#method.new), we give it an object that implement these methods:
+When initiliazing Servo via
+[Servo::new](http://doc.servo.org/servo/struct.Servo.html#method.new), we give
+it an object that implement the `WindowMethods`:
 
 ```rust
 use servo::compositing::windowing::WindowMethods;
@@ -276,8 +266,8 @@ let window = Rc::new(Window {
     waker: event_loop_waker,
     gl: gl,
 });
-let mut servo = servo::Servo::new(window.clone());
 
+let mut servo = servo::Servo::new(window.clone());
 
 // […]
 
@@ -297,21 +287,23 @@ via `create_event_loop_waker()`.
 
 via `framebuffer_size()` `window_rect()` `size()` …
 
-These methods are used by Servo to get the size, position and pixel density of the window. For example when a website use `window.outerWidth`. Also used to calculate the layout of the page.
+These methods are used by Servo to get the size, position and pixel density of
+the window. For example when a website use `window.outerWidth`. Also used to
+calculate the layout of the page.
 
 `set_inner_size()` `set_position()`…
 
 Used to resize and move the native window. When a website use `window.moveTo()` for example.
 
-#### Gl operations
+#### OpenGL operations
 
-These methods are used to update the pixels on the screen. `present()` is called when the Gl buffer is ready to be painted. Usually, by swapping the Gl buffers. `prepare_for_composite()` is called before compositing. It's useful when multiple buffers are presents. Usually, it's when the Gl needs to be made current.
+These methods are used to update the pixels on the screen. `present()` is called when the OpenGL buffer is ready to be painted. Usually, by swapping the OpenGL buffers. `prepare_for_composite()` is called before compositing. It's useful when multiple buffers are present. Usually, it's when the OpenGL needs to be made current.
 
 #### Navigation callbacks
 
 `load_start` `load_end` `head_parsed` `history_changed`…
 
-The methods are used to inform the embedder of the status of the current web page. These are usuful to update a spinner when the page is loading, or update the title of the page in a tab.
+These methods are used to inform the embedder of the status of the current web page. For example, these are usuful to update a spinner when the page is loading or update the title and the url of the tab, when the user clicks on a link.
 
 Minimal implementation:
 
@@ -324,7 +316,7 @@ use servo::servo_geometry::DeviceIndependentPixel;
 use servo::servo_url::ServoUrl;
 use servo::style_traits::DevicePixel;
 use servo::style_traits::cursor::Cursor;
-use self::servo::msg::constellation_msg::{Key, KeyModifiers};
+use servo::msg::constellation_msg::{Key, KeyModifiers};
 
 // […]
 
@@ -374,6 +366,17 @@ impl WindowMethods for Window {
         (Size2D::new(width, height), Point2D::new(x as i32, y as i32))
     }
 
+    fn set_page_title(&self, _id: BrowserId, _title: Option<String>) {
+        self.glutin_window.set_title(match title {
+            Some(ref title) => title,
+            None => "",
+        });
+    }
+
+    fn allow_navigation(&self, _id: BrowserId, _url: ServoUrl, chan: ipc::IpcSender<bool>) {
+        chan.send(true).ok();
+    }
+
     fn set_inner_size(&self, _id: BrowserId, _size: Size2D<u32>) {
     }
 
@@ -383,18 +386,7 @@ impl WindowMethods for Window {
     fn set_fullscreen_state(&self, _id: BrowserId, _state: bool) {
     }
 
-    fn set_page_title(&self, _id: BrowserId, _title: Option<String>) {
-        self.glutin_window.set_title(match title {
-            Some(ref title) => title,
-            None => "",
-        });
-    }
-
     fn status(&self, _id: BrowserId, _status: Option<String>) {
-    }
-
-    fn allow_navigation(&self, _id: BrowserId, _url: ServoUrl, chan: ipc::IpcSender<bool>) {
-        chan.send(true).ok();
     }
 
     fn load_start(&self, _id: BrowserId) {
@@ -426,11 +418,11 @@ impl WindowMethods for Window {
 
 Note: this will change. [See this issue](https://github.com/paulrouget/servoshell/issues/39).
 
-##  Creating a browser
+## Creating a browser
 
-Now we have the callbacks in place, it's time to create the first browser. A browser, also known as a top level browsing context, can be seen as a "tab". It is identified by `BrowserId`, which is an alias to `TopLevelBrowsingContextId`. Multiple browsers can be instanciated. Only one can be displayed at a time, unless multiple compositor are created (see [this issue](https://github.com/servo/servo/issues/13993)).
+Now we have the callbacks in place, it's time to create the first browser. A browser, also known as a top level browsing context, can be seen as a "tab". It is identified by a `BrowserId`, which is an alias to `TopLevelBrowsingContextId`. Multiple browsers can be instanciated. Only one can be displayed at a time, unless multiple compositor are created (see [this issue](https://github.com/servo/servo/issues/13993)).
 
-So far, we've seen how servo talks back to the embedder. To communicate to servo, we use `WindowEvent`s. The two events we are interested in now are `CreateBrowser`and `SelectBrowser`.
+So far, we've seen how servo talks back to the embedder. To communicate to servo, we use [`WindowEvent`](http://doc.servo.org/compositing/windowing/enum.WindowEvent.html)s. The two events we are interested in now are `CreateBrowser`and `SelectBrowser`.
 
 `CreateBrowser` will build a new browser and, once ready, send back its `BrowserId` via a [ipc channel](https://doc.servo.org/ipc_channel/index.html). Once received, we use `SelectBrowser` to ask servo to paint that specific browser.
 
@@ -445,7 +437,7 @@ servo.handle_events(vec![WindowEvent::SelectBrowser(browser_id)]);
 
 At this point, almost everything is in place.
 
-If we run the current code, we will only see a white screen. It's because at the moment, servo needs to be notified when to process events from its internal components, and from the embedder.
+If we run the current code, we will only see a white screen. At the moment, servo needs to be notified when to process events from its internal components, and from the embedder.
 
 Note: this will change. [See this issue](https://github.com/servo/servo/issues/15734#issuecomment-328799888).
 
@@ -472,7 +464,7 @@ At this point, the web page should be painted, and the title of the window shoul
 
 ## Sending events to servo
 
-As you can notice, user inputs have no effect on the page. Scrolling, clicks or keyboard inputs are not sent to servo yet. In our example, user events come from Glutin, and need to be sent to Servo via `handle_events(Vec<WindowEvent>)`. WindowEvents are use for Embeder to Servo communication. All the events are described in windowing.rs:
+As you can notice, user inputs have no effects on the page. Scrolling, clicks or keyboard inputs are not sent to servo yet. In our example, user events come from Glutin, and need to be sent to Servo via `handle_events(Vec<WindowEvent>)`. WindowEvents are use for embedder-to-servo communication. All the events are described in windowing.rs:
 
 https://doc.servo.org/compositing/windowing/enum.WindowEvent.html
 
@@ -482,9 +474,13 @@ In this tutorial, we will implement mousemove events, cursor update, and scrolli
 
 ## Mouse coordinates and cursor update
 
-This is a good way to show the two-ways communication mechanism between servo and the embedder. As the mouse move, the embedder needs to send the pointer coordinates to servo, and as the pointer moves, servo might request the embedder to change its cursor (when hovering a link for example).
+This is a good way to show the two-ways communication mechanism between servo
+and the embedder. As the mouse moves, the embedder needs to send the pointer
+coordinates to servo, and as the pointer moves, servo might request the
+embedder to change its cursor (when hovering a link for example).
 
-We catch the Glutin event, translate it into a Servo event, and send it to Servo. We save the pointer position as we will need it later for scrolling.
+We catch the Glutin event, translate it into a Servo event, and send it to
+Servo. We save the pointer position as we will need it later for scrolling.
 
 ```rust
 event_loop.run_forever(|event| {
@@ -528,7 +524,6 @@ Scrolling is pretty straight forward. Again, all we need is to translate Glutin 
 
 ```Rust
 glutin::Event::WindowEvent {event: glutin::WindowEvent::MouseWheel{delta, phase, ..} , ..} => {
-  let pointer = TypedPoint2D::new(pointer.0 as i32, pointer.1 as i32);
   let (dx, dy) = match delta {
     glutin::MouseScrollDelta::LineDelta(dx, dy) => (dx, dy * 38.0 /*line height*/),
     glutin::MouseScrollDelta::PixelDelta(dx, dy) => (dx, dy),
@@ -540,6 +535,7 @@ glutin::Event::WindowEvent {event: glutin::WindowEvent::MouseWheel{delta, phase,
     glutin::TouchPhase::Ended => TouchEventType::Up,
     glutin::TouchPhase::Cancelled => TouchEventType::Up,
   };
+  let pointer = TypedPoint2D::new(pointer.0 as i32, pointer.1 as i32);
   let event = WindowEvent::Scroll(scroll_location, pointer, phase);
   servo.handle_events(vec![event]);
 }
@@ -572,8 +568,6 @@ For tab support, all that needs to be done is creating a new browser via `Create
 ## Full support for key and mouse events and navigation control
 
 The same way mouse move and mouse wheel events are sent to servo, it's also necessary to forward the key events and any mouse inputs. When it comes to navigation control, like reload, going back/forward, loading a new url, etc; it's up to the embedder to send to appropriate `WindowEvent`. This is not covered by this tutorial to not make it longer that it's necessary.
-
---------
 
 ## More
 
