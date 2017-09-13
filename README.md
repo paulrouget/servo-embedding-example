@@ -8,7 +8,7 @@ This repository [paulrouget/servo-embedding-example](http://github.com/paulrouge
 
 ## Notes:
 
-The Servo embedding API is still work-in-progress. It is functional but not polished.
+The Servo embedding API is still work-in-progress. It is functional but not polished. Some cosmetic changes are planned. See [this issue](https://github.com/servo/servo/issues/18479).
 
 This tutorial does not cover how to build on Windows as it is far from being straight forward for now as it requires importing and tweaking multiple python script from Servo. See [servo/servo#18343](http://github.com/servo/servo/issues/18343) and [paulrouget/servoshell#33](http://github.com/paulrouget/servoshell/issues/33).
 
