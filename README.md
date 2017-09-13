@@ -2,14 +2,13 @@ Tutorial: Embedding Servo
 =========================
 
 This document describes how to use Servo in a third party Rust project.
-
 It comes with the implementation of standalone minimal browser.
 
-The repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example) is regularly updated to match the must recent Servo version.
+This repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example) is regularly updated to match the must recent Servo version.
 
 ## Notes:
 
-The embedding API is still work-in-progress. It is functional but not polished.
+The Servo embedding API is still work-in-progress. It is functional but not polished.
 
 This tutorial does not cover how to build on Windows as it is far from being straight forward for now as it requires importing and tweaking multiple python script from Servo. See [servo/servo#18343](http://github.com/servo/servo/issues/18343) and [paulrouget/servoshell#33](http://github.com/paulrouget/servoshell/issues/33).
 
@@ -68,7 +67,7 @@ libservo = { git = "https://github.com/servo/servo", rev = "6051e5ed02" }
 
 Because we are importing some files from the servo repository directly (`rust-toolchain`, and as we will see later, `Cargo.lock` and `resources`) and because Servo is not versionned yet, it is necessary to specify servo's revision hash (with `rev = …`).
 
-If you'd rather use local copy of Servo, do not point to the root of the servo directory but to `components/servo`:
+If you'd rather use a local copy of Servo, do not point to the root of the servo directory but to `components/servo`:
 
 ```toml
 [dependencies]
@@ -184,7 +183,7 @@ impl EventLoopWaker for GlutinEventLoopWaker {
 
 fn main() {
     // […]
-  	let mut event_loop = glutin::EventsLoop::new();
+    let mut event_loop = glutin::EventsLoop::new();
     // Will be use used by Servo later
     let event_loop_waker = Box::new(GlutinEventLoopWaker {
         proxy: Arc::new(event_loop.create_proxy())
@@ -458,9 +457,11 @@ event_loop.run_forever(|event| {
 });
 ```
 
-At this point, the web page should be painted, and the title of the window should be updated:
+At this point, the web page should be painted.
 
 ![embedding1](images/embedding1.png)
+
+Notice that the window title says "Servo, the parallel browser engine". The title has been update via the `WindowMethod::set_page_title` callback we implemented earlier.
 
 ## Sending events to servo
 
@@ -567,7 +568,7 @@ For tab support, all that needs to be done is creating a new browser via `Create
 
 ## Full support for key and mouse events and navigation control
 
-The same way mouse move and mouse wheel events are sent to servo, it's also necessary to forward the key events and any mouse inputs. When it comes to navigation control, like reload, going back/forward, loading a new url, etc; it's up to the embedder to send to appropriate `WindowEvent`. This is not covered by this tutorial to not make it longer that it's necessary.
+The same way mouse move and mouse wheel events are sent to servo, it's also necessary to forward key events and mouse inputs. When it comes to navigation control, like reload, going back/forward, loading a new url, etc; it's up to the embedder to send to appropriate `WindowEvent`. This is not covered by this tutorial to not make it longer that it's necessary.
 
 ## More
 
