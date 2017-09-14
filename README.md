@@ -82,7 +82,7 @@ Note: this will change. [See this issue](https://github.com/paulrouget/servoshel
 
 Servo also requires some "resources" files to run properly:
 
-* `cp -r ../servo/resources/ .`
+* `cp -r ../servo/resources .`
 
 Note: this will change. [See this issue](https://github.com/paulrouget/servoshell/issues/38).
 
