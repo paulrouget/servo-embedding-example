@@ -224,7 +224,7 @@ At this point, we managed to:
 
 The next step is to initialize Servo and implement its callbacks.
 
-## Configure Servo:
+## Configure Servo
 
 http://doc.servo.org/servo_config/opts/struct.Opts.html
 
