@@ -9,7 +9,7 @@ is regularly updated to match the must recent Servo version.
 
 Servo documentation: [https://doc.servo.org](https://doc.servo.org).
 
-Servo type entry point: [https://doc.servo.org/servo_url/struct.ServoUrl.html](https://doc.servo.org/servo_url/struct.ServoUrl.html).
+Servo type entry point: [https://doc.servo.org/servo/struct.Servo.html](https://doc.servo.org/servo/struct.Servo.html).
 
 ## Warning
 
