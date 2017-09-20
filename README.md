@@ -7,9 +7,9 @@ It comes with the implementation of standalone minimal browser.
 This repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example)
 is regularly updated to match the must recent Servo version.
 
-Servo documentation: (https://doc.servo.org)[https://doc.servo.org].
+Servo documentation: [https://doc.servo.org](https://doc.servo.org).
 
-Servo type entry point: (https://doc.servo.org/servo_url/struct.ServoUrl.html)[https://doc.servo.org/servo_url/struct.ServoUrl.html].
+Servo type entry point: [https://doc.servo.org/servo_url/struct.ServoUrl.html](https://doc.servo.org/servo_url/struct.ServoUrl.html).
 
 ## Warning
 
