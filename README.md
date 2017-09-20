@@ -4,9 +4,14 @@ Tutorial: Embedding Servo
 This document describes how to use Servo in a third party Rust project.
 It comes with the implementation of standalone minimal browser.
 
-This repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example) is regularly updated to match the must recent Servo version.
+This repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example)
+is regularly updated to match the must recent Servo version.
 
-## Notes:
+Servo documentation: (https://doc.servo.org)[https://doc.servo.org].
+
+Servo type entry point: (https://doc.servo.org/servo_url/struct.ServoUrl.html)[https://doc.servo.org/servo_url/struct.ServoUrl.html].
+
+## Warning
 
 The Servo embedding API is still work-in-progress. It is functional but not polished. Some cosmetic changes are planned. See [this issue](https://github.com/servo/servo/issues/18479).
 
@@ -237,15 +242,19 @@ let mut opts = opts::default_opts();
 opts::set_defaults(opts);
 ```
 
+## the `Servo` type
+
+`Servo` is the entry point to create browser and send events to Servo's internals.
+
+Initiliazing Servo via
+[Servo::new](http://doc.servo.org/servo/struct.Servo.html#method.new) requires an
+object that implement the `WindowMethods`.
+
 ## Implement WindowMethods
 
 http://doc.servo.org/compositing/windowing/trait.WindowMethods.html
 
 The `WindowMethods` trait describes a set of methods the embedder must implement.
-
-When initiliazing Servo via
-[Servo::new](http://doc.servo.org/servo/struct.Servo.html#method.new), we give
-it an object that implement the `WindowMethods`:
 
 ```rust
 use servo::compositing::windowing::WindowMethods;
