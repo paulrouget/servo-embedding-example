@@ -7,9 +7,9 @@ It comes with the implementation of standalone minimal browser.
 This repository [paulrouget/servo-embedding-example](http://github.com/paulrouget/servo-embedding-example)
 is regularly updated to match the must recent Servo version.
 
-Servo documentation: [https://doc.servo.org](https://doc.servo.org).
+Servo documentation: [doc.servo.org](https://doc.servo.org).
 
-Servo type entry point: [https://doc.servo.org/servo/struct.Servo.html](https://doc.servo.org/servo/struct.Servo.html).
+Servo type entry point: [doc.servo.org/servo/struct.Servo.html](https://doc.servo.org/servo/struct.Servo.html).
 
 ## Warning
 
@@ -244,11 +244,11 @@ opts::set_defaults(opts);
 
 ## the `Servo` type
 
-[`Servo`](http://doc.servo.org/servo/struct.Servo.html) is the entry point to create browser and send events to Servo's internals.
+[`Servo`](http://doc.servo.org/servo/struct.Servo.html) is the entry point to create browsers and send events to Servo's internals.
 
-Initiliazing Servo via
-[Servo::new](http://doc.servo.org/servo/struct.Servo.html#method.new) requires an
-object that implement the `WindowMethods`.
+Initiliazing Servo (via
+[Servo::new](http://doc.servo.org/servo/struct.Servo.html#method.new)) requires an
+object that implements the `WindowMethods`.
 
 ## Implement WindowMethods
 
