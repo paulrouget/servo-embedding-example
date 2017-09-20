@@ -244,7 +244,7 @@ opts::set_defaults(opts);
 
 ## the `Servo` type
 
-`Servo` is the entry point to create browser and send events to Servo's internals.
+[`Servo`](http://doc.servo.org/servo/struct.Servo.html) is the entry point to create browser and send events to Servo's internals.
 
 Initiliazing Servo via
 [Servo::new](http://doc.servo.org/servo/struct.Servo.html#method.new) requires an
