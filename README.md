@@ -171,7 +171,7 @@ use std::sync::Arc;
 use servo::compositing::compositor_thread::EventLoopWaker;
 
 pub struct GlutinEventLoopWaker {
-    proxy: Arc<glutin::EventsLoopProxy>
+    pub proxy: Arc<glutin::EventsLoopProxy>
 }
 
 impl EventLoopWaker for GlutinEventLoopWaker {
