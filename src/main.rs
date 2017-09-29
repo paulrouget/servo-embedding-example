@@ -146,6 +146,13 @@ fn main() {
                 let event = WindowEvent::Scroll(scroll_location, pointer, phase);
                 servo.handle_events(vec![event]);
             }
+            glutin::Event::WindowEvent {
+                event: glutin::WindowEvent::Resized(width, height), ..
+            } => {
+                let event = WindowEvent::Resize(window.framebuffer_size());
+                servo.handle_events(vec![event]);
+                window.glutin_window.resize(width, height);
+            }
             _ => {}
         }
         glutin::ControlFlow::Continue
