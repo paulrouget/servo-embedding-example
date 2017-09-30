@@ -67,8 +67,10 @@ Add Servo as a dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-libservo = { git = "https://github.com/servo/servo", rev = "6051e5ed02" }
+libservo = { git = "https://github.com/servo/servo", rev = "XXXXXXXXXX" }
 ```
+
+Replace `XXXXXXXXXX` with the commit hash of Servo HEAD. For example: `75a4dcf`.
 
 Because we are importing some files from the servo repository directly (`rust-toolchain`, and as we will see later, `Cargo.lock` and `resources`) and because Servo is not versionned yet, it is necessary to specify servo's revision hash (with `rev = …`).
 
@@ -93,7 +95,7 @@ Note: this will change. [See this issue](https://github.com/paulrouget/servoshel
 
 ## Update servo
 
-To update Servo:
+In this example, we depend on a specific version of Servo. When you want to update Servo to a more recent version, do:
 
 1. change the revision in `Cargo.toml` (the `rev` field)
 2. Copy `rust-toolchain`, `Cargo.log` and `resources` from Servo
