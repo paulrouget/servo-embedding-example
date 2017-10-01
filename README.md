@@ -123,7 +123,7 @@ Minimal code:
 extern crate servo;
 
 fn main() {
-    println!("Servo version: {}", servo::servo_version());
+    println!("Servo version: {}", servo::config::servo_version());
 }
 ```
 
