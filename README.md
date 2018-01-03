@@ -98,7 +98,7 @@ Note: this will change. [See this issue](https://github.com/paulrouget/servoshel
 In this example, we depend on a specific version of Servo. When you want to update Servo to a more recent version, do:
 
 1. change the revision in `Cargo.toml` (the `rev` field)
-2. Copy `rust-toolchain`, `Cargo.log` and `resources` from Servo
+2. Copy `rust-toolchain`, `Cargo.lock` and `resources` from Servo
 
 ## OpenGL
 
