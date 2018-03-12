@@ -6,7 +6,7 @@ use glutin::GlContext;
 use servo::BrowserId;
 use servo::compositing::compositor_thread::EventLoopWaker;
 use servo::compositing::windowing::{WindowEvent, WindowMethods};
-use servo::euclid::{Point2D, ScaleFactor, Size2D, TypedPoint2D, TypedRect, TypedSize2D,
+use servo::euclid::{Point2D, Size2D, TypedPoint2D, TypedRect, TypedScale, TypedSize2D,
                     TypedVector2D};
 use servo::ipc_channel::ipc;
 use servo::msg::constellation_msg::{Key, KeyModifiers};
@@ -17,7 +17,7 @@ use servo::servo_config::resource_files::set_resources_path;
 use servo::servo_geometry::DeviceIndependentPixel;
 use servo::servo_url::ServoUrl;
 use servo::style_traits::DevicePixel;
-use servo::style_traits::cursor::Cursor;
+use servo::style_traits::cursor::CursorKind;
 use std::env;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -29,7 +29,9 @@ pub struct GlutinEventLoopWaker {
 impl EventLoopWaker for GlutinEventLoopWaker {
     // Use by servo to share the "event loop waker" across threads
     fn clone(&self) -> Box<EventLoopWaker + Send> {
-        Box::new(GlutinEventLoopWaker { proxy: self.proxy.clone() })
+        Box::new(GlutinEventLoopWaker {
+            proxy: self.proxy.clone(),
+        })
     }
     // Called by servo when the main thread needs to wake up
     fn wake(&self) {
@@ -44,7 +46,6 @@ struct Window {
 }
 
 fn main() {
-
     println!("Servo version: {}", servo::config::servo_version());
 
     let mut event_loop = glutin::EventsLoop::new();
@@ -66,8 +67,9 @@ fn main() {
         gl::GlFns::load_with(|s| window.context().get_proc_address(s) as *const _)
     };
 
-    let event_loop_waker =
-        Box::new(GlutinEventLoopWaker { proxy: Arc::new(event_loop.create_proxy()) });
+    let event_loop_waker = Box::new(GlutinEventLoopWaker {
+        proxy: Arc::new(event_loop.create_proxy()),
+    });
 
     let path = env::current_dir().unwrap().join("resources");
     let path = path.to_str().unwrap().to_string();
@@ -75,10 +77,10 @@ fn main() {
     opts::set_defaults(opts::default_opts());
 
     let window = Rc::new(Window {
-                             glutin_window: window,
-                             waker: event_loop_waker,
-                             gl: gl,
-                         });
+        glutin_window: window,
+        waker: event_loop_waker,
+        gl: gl,
+    });
 
     let mut servo = servo::Servo::new(window.clone());
 
@@ -100,24 +102,30 @@ fn main() {
 
             // Mousemove
             glutin::Event::WindowEvent {
-                event: glutin::WindowEvent::MouseMoved { position: (x, y), .. }, ..
+                event:
+                    glutin::WindowEvent::CursorMoved {
+                        position: (x, y), ..
+                    },
+                ..
             } => {
                 pointer = (x, y);
-                let event = WindowEvent::MouseWindowMoveEventClass(TypedPoint2D::new(x as f32,
-                                                                                     y as f32));
+                let event =
+                    WindowEvent::MouseWindowMoveEventClass(TypedPoint2D::new(x as f32, y as f32));
                 servo.handle_events(vec![event]);
             }
 
             // reload when R is pressed
             glutin::Event::WindowEvent {
-                event: glutin::WindowEvent::KeyboardInput {
-                    input: glutin::KeyboardInput {
-                        state: glutin::ElementState::Pressed,
-                        virtual_keycode: Some(glutin::VirtualKeyCode::R),
+                event:
+                    glutin::WindowEvent::KeyboardInput {
+                        input:
+                            glutin::KeyboardInput {
+                                state: glutin::ElementState::Pressed,
+                                virtual_keycode: Some(glutin::VirtualKeyCode::R),
+                                ..
+                            },
                         ..
                     },
-                    ..
-                },
                 ..
             } => {
                 let event = WindowEvent::Reload(browser_id);
@@ -126,7 +134,8 @@ fn main() {
 
             // Scrolling
             glutin::Event::WindowEvent {
-                event: glutin::WindowEvent::MouseWheel { delta, phase, .. }, ..
+                event: glutin::WindowEvent::MouseWheel { delta, phase, .. },
+                ..
             } => {
                 let pointer = TypedPoint2D::new(pointer.0 as i32, pointer.1 as i32);
                 let (dx, dy) = match delta {
@@ -147,9 +156,10 @@ fn main() {
                 servo.handle_events(vec![event]);
             }
             glutin::Event::WindowEvent {
-                event: glutin::WindowEvent::Resized(width, height), ..
+                event: glutin::WindowEvent::Resized(width, height),
+                ..
             } => {
-                let event = WindowEvent::Resize(window.framebuffer_size());
+                let event = WindowEvent::Resize;
                 servo.handle_events(vec![event]);
                 window.glutin_window.resize(width, height);
             }
@@ -180,8 +190,8 @@ impl WindowMethods for Window {
         self.gl.clone()
     }
 
-    fn hidpi_factor(&self) -> ScaleFactor<f32, DeviceIndependentPixel, DevicePixel> {
-        ScaleFactor::new(self.glutin_window.hidpi_factor())
+    fn hidpi_factor(&self) -> TypedScale<f32, DeviceIndependentPixel, DevicePixel> {
+        TypedScale::new(self.glutin_window.hidpi_factor())
     }
 
     fn framebuffer_size(&self) -> TypedSize2D<u32, DevicePixel> {
@@ -212,11 +222,10 @@ impl WindowMethods for Window {
     fn set_fullscreen_state(&self, _id: BrowserId, _state: bool) {}
 
     fn set_page_title(&self, _id: BrowserId, title: Option<String>) {
-        self.glutin_window
-            .set_title(match title {
-                           Some(ref title) => title,
-                           None => "",
-                       });
+        self.glutin_window.set_title(match title {
+            Some(ref title) => title,
+            None => "",
+        });
     }
 
     fn status(&self, _id: BrowserId, _status: Option<String>) {}
@@ -235,9 +244,9 @@ impl WindowMethods for Window {
 
     fn history_changed(&self, _id: BrowserId, _entries: Vec<LoadData>, _current: usize) {}
 
-    fn set_cursor(&self, cursor: Cursor) {
+    fn set_cursor(&self, cursor: CursorKind) {
         let cursor = match cursor {
-            Cursor::Pointer => glutin::MouseCursor::Hand,
+            CursorKind::Pointer => glutin::MouseCursor::Hand,
             _ => glutin::MouseCursor::Default,
         };
         self.glutin_window.set_cursor(cursor);
@@ -245,10 +254,26 @@ impl WindowMethods for Window {
 
     fn set_favicon(&self, _id: BrowserId, _url: ServoUrl) {}
 
-    fn handle_key(&self,
-                  _id: Option<BrowserId>,
-                  _ch: Option<char>,
-                  _key: Key,
-                  _mods: KeyModifiers) {
+    fn handle_key(
+        &self,
+        _id: Option<BrowserId>,
+        _ch: Option<char>,
+        _key: Key,
+        _mods: KeyModifiers,
+    ) {
+    }
+
+    fn handle_panic(&self, _id: BrowserId, _reason: String, _backtrace: Option<String>) {}
+
+    fn screen_avail_size(&self, _id: BrowserId) -> Size2D<u32> {
+        let monitor = self.glutin_window.get_current_monitor();
+        let (monitor_width, monitor_height) = monitor.get_dimensions();
+        Size2D::new(monitor_width, monitor_height)
+    }
+
+    fn screen_size(&self, _id: BrowserId) -> Size2D<u32> {
+        let monitor = self.glutin_window.get_current_monitor();
+        let (monitor_width, monitor_height) = monitor.get_dimensions();
+        Size2D::new(monitor_width, monitor_height)
     }
 }
